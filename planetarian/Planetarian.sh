@@ -25,13 +25,6 @@ rlvm_dir="$HOME/rlvm"
 rlvm_file="$controlfolder/libs/${runtime}.squashfs"
 font="--font $rlvm_dir/fonts/msgothic.ttc"
 
-# Set current virtual screen
-if [ "$CFW_NAME" == "muOS" ]; then
-  /opt/muos/extra/muxlog & CUR_TTY="/tmp/muxlog_info"
-else
-    CUR_TTY="/dev/tty0"
-fi
-
 cd $GAMEDIR
 > "$GAMEDIR/log.txt" && exec > >(tee "$GAMEDIR/log.txt") 2>&1
 
@@ -45,7 +38,7 @@ fi
 if [ ! -f "$controlfolder/libs/${runtime}.squashfs" ]; then
   # Check for runtime if not downloaded via PM
   if [ ! -f "$controlfolder/harbourmaster" ]; then
-    echo "This port requires the latest PortMaster to run, please go to https://portmaster.games/ for more info." > $CUR_TTY
+    echo "This port requires the latest PortMaster to run, please go to https://portmaster.games/ for more info." > /dev/tty0
     sleep 5
     exit 1
   fi
@@ -62,8 +55,11 @@ PATH="$rlvm_dir:$PATH"
 rm -rf "$HOME/.rlvm/KEY_planetarian_ME"
 ln -s "$GAMEDIR/saves" "$HOME/.rlvm/KEY_planetarian_ME"
 
-export LD_LIBRARY_PATH="$rlvm_dir/gl4es:$rlvm_dir/libs:$LD_LIBRARY_PATH"
-export SDL_VIDEO_GL_DRIVER="$rlvm_dir/gl4es/libGL.so.1"
+export LD_LIBRARY_PATH="$rlvm_dir/libs":$LD_LIBRARY_PATH
+if [ "$LIBGL_FB" != "" ]; then
+  export SDL_VIDEO_GL_DRIVER="$rlvm_dir/gl4es/libGL.so.1"
+  export LD_LIBRARY_PATH="$rlvm_dir/gl4es:$LD_LIBRARY_PATH"
+fi
 
 # Setup controls
 $ESUDO chmod 666 /dev/tty0
@@ -72,8 +68,8 @@ $ESUDO chmod 666 /dev/uinput
 $GPTOKEYB "$runtime" -c "rlvm.gptk" & 
 
 # Run the game
-echo "Loading, please wait... (might take a while!)" > $CUR_TTY
-$runtime $font "$GAMEDIR/gamedata"
+echo "Loading, please wait... (might take a while!)" > /dev/tty0
+$runtime $font "$GAMEDIR/gamedata" 2>&1 | tee ./"log.txt"
 $ESUDO kill -9 $(pidof gptokeyb)
 $ESUDO umount "$rlvm_file" || true
 $ESUDO systemctl restart oga_events & 
