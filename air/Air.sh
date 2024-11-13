@@ -60,9 +60,9 @@ if [ "$LIBGL_FB" != "" ]; then
 fi
 
 # Create the config folders
-for SAVEDIR in "${SAVEDIR[@]}"; do
-    rm -rf "$HOME/.rlvm/$SAVEDIR"
-    ln -s "$GAMEDIR/saves" "$HOME/.rlvm/$SAVEDIR"
+for DIR in $SAVEDIR; do
+    rm -rf "$HOME/.rlvm/$DIR"
+    ln -s "$GAMEDIR/saves" "$HOME/.rlvm/$DIR"
 done
 
 # Setup controls
